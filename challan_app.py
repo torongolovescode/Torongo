@@ -1,4 +1,4 @@
-import streamlit as st
+ import streamlit as st
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -84,14 +84,22 @@ if uploaded_file is not None:
             if not os.path.exists("temp_challans"):
                 os.makedirs("temp_challans")
                 
-            # Server-Safe Chrome Setup
+            # --- UPDATED: Server-Safe Chrome Setup with Anti-Lag ---
             options = webdriver.ChromeOptions()
             options.add_argument('--headless') 
             options.add_argument('--no-sandbox')
             options.add_argument('--disable-dev-shm-usage')
             options.add_argument('--disable-gpu')
             options.add_argument('--window-size=1920,1080') 
+            
+            # Make the server look like a normal Windows computer to bypass basic blocks
+            options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36')
+            
             driver = webdriver.Chrome(options=options)
+            
+            # Force it to fail after 30 seconds instead of hanging forever
+            driver.set_page_load_timeout(30)
+            # -------------------------------------------------------
             
             pdf_file_paths = [] 
             successful_challans = []
@@ -125,6 +133,7 @@ if uploaded_file is not None:
                     successful_challans.append(challan_no)
                     
                 except Exception as e:
+                    # If it takes longer than 30s or gets blocked, it skips to here safely
                     failed_challans.append(challan_no)
                 
                 progress_bar.progress((index + 1) / total_challans)
@@ -158,7 +167,7 @@ if uploaded_file is not None:
                 st.success(f"✅ Successfully downloaded: **{len(successful_challans)}**")
                 
                 if failed_challans:
-                    st.error(f"❌ Failed to download: **{len(failed_challans)}**")
+                    st.error(f"❌ Failed to download (Timeout/Blocked): **{len(failed_challans)}**")
                     with st.expander("View failed challan numbers"):
                         st.write(", ".join(failed_challans))
                 
@@ -177,4 +186,4 @@ if uploaded_file is not None:
                 os.rmdir("temp_challans")
             else:
                 status_text.empty()
-                st.error("❌ Failed to download any challans. Please check the challan numbers and try again.")
+                st.error("❌ Failed to download any challans. The server might be blocking the connection or taking too long.")
