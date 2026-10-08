@@ -1,4 +1,4 @@
- import streamlit as st
+import streamlit as st
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.print_page_options import PrintOptions
